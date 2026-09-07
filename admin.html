@@ -52,6 +52,7 @@
 </head>
 <body>
 
+    <!-- Tela de Login -->
     <div id="login-screen">
         <div class="login-box">
             <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
@@ -67,6 +68,7 @@
     </div>
 
     <div class="admin-container">
+        <!-- Formulário de Adição -->
         <div class="card">
             <h2>Novo Serviço</h2>
             <form id="form-servico">
@@ -93,6 +95,7 @@
             </form>
         </div>
 
+        <!-- Lista de Serviços -->
         <div class="card">
             <h2>Serviços Cadastrados</h2>
             <div style="overflow-x: auto;">
@@ -113,6 +116,7 @@
         </div>
     </div>
 
+    <!-- SCRIPT 1: Login com Sessão Fixa -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('vini_admin_logado') === 'true') {
@@ -141,45 +145,59 @@
         });
     </script>
 
+    <!-- SCRIPT 2: Supabase com Alertas de Diagnóstico -->
     <script>
-        // CONFIGURAÇÃO DO SUPABASE (Insira seus dados abaixo)
         const supabaseUrl = 'https://zdxsuwdcvfzseyjhsjlg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkeHN1d2RjdmZ6c2V5amhzamxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODYwMzMsImV4cCI6MjEwNDM2MjAzM30.mNfK87n36GFl1h4TIn2KmyXCoI7cWhqWLnw3mXy5isw'; 
         
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         async function carregarServicos() {
-            const { data: servicos, error } = await supabase.from('servicos').select('*').order('categoria', { ascending: true });
-            
-            if (error) {
-                console.error('Erro ao buscar dados:', error);
-                document.getElementById('tabela-servicos').innerHTML = `<tr><td colspan="4" style="color: red;">Erro ao carregar dados do Supabase.</td></tr>`;
-                return;
+            try {
+                const { data: servicos, error } = await supabase.from('servicos').select('*').order('categoria', { ascending: true });
+                
+                if (error) {
+                    console.error('Erro ao buscar dados:', error);
+                    document.getElementById('tabela-servicos').innerHTML = `<tr><td colspan="4" style="color: red;">Erro ao carregar: ${error.message}</td></tr>`;
+                    return;
+                }
+                
+                renderizarTabela(servicos);
+            } catch (err) {
+                console.error('Erro de exceção:', err);
             }
-            
-            renderizarTabela(servicos);
         }
 
         document.getElementById('form-servico').addEventListener('submit', async function(e) {
-            e.preventDefault();
+            e.preventDefault(); // Impede o recarregamento padrão
             
+            const categoria = document.getElementById('categoria').value;
+            const nome = document.getElementById('nome').value;
+            const precoStr = document.getElementById('preco').value;
+            const variavel = document.getElementById('variavel').value === 'true';
+
+            if (!categoria || !nome || !precoStr) {
+                alert('Preencha todos os campos!');
+                return;
+            }
+
             const btnSubmit = this.querySelector('button[type="submit"]');
             btnSubmit.innerHTML = 'Salvando...';
             btnSubmit.disabled = true;
 
             const novoServico = {
-                categoria: document.getElementById('categoria').value,
-                nome: document.getElementById('nome').value,
-                preco: parseFloat(document.getElementById('preco').value),
-                variavel: document.getElementById('variavel').value === 'true'
+                categoria: categoria.trim(),
+                nome: nome.trim(),
+                preco: parseFloat(precoStr),
+                variavel: variavel
             };
 
-            const { error } = await supabase.from('servicos').insert([novoServico]);
+            const { data, error } = await supabase.from('servicos').insert([novoServico]);
 
             if (error) {
-                alert('ERRO DO SUPABASE: ' + error.message);
+                alert('ERRO DO SUPABASE AO SALVAR: ' + error.message);
             } else {
-                alert('Serviço cadastrado com sucesso!');
+                alert('Sucesso! Serviço salvo no banco.');
                 this.reset();
                 carregarServicos();
             }
