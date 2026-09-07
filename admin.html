@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Vini Polimentos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Biblioteca do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0a0a0a;
+            --bg-card: #141414;
+            --accent: #00d4ff;
+            --text-main: #ffffff;
+            --danger: #ff4757;
+        }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 0; }
+        h1, h2 { font-family: 'Orbitron', sans-serif; color: var(--accent); }
+        .admin-container { max-width: 1000px; margin: 40px auto; display: grid; gap: 20px; grid-template-columns: 1fr 2fr; padding: 0 20px; }
+        .card { background: var(--bg-card); padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: #aaa; }
+        input, select { width: 100%; padding: 10px; background: #000; border: 1px solid #444; color: #fff; border-radius: 5px; box-sizing: border-box; }
+        input:focus, select:focus { outline: none; border-color: var(--accent); }
+        .btn { padding: 12px 15px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; text-transform: uppercase; }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-primary:hover { background: #00b8e6; }
+        .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); padding: 5px 10px; width: auto; }
+        .btn-danger:hover { background: var(--danger); color: #fff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #333; font-size: 0.9rem; }
+        th { color: var(--accent); }
+        
+        /* Tela de Login */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-dark); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        .login-box {
+            background: var(--bg-card); padding: 40px; border-radius: 10px; border: 1px solid var(--accent);
+            text-align: center; width: 90%; max-width: 400px;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Tela de Login -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
+            <input type="password" id="senha-admin" placeholder="Digite a senha" style="margin-bottom: 15px; text-align: center; font-size: 1.1rem;">
+            <button onclick="verificarSenha()" class="btn btn-primary">Entrar</button>
+            <p id="erro-senha" style="color: var(--danger); margin-top: 15px; display: none;">Senha incorreta!</p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px;">
+        <h1>Painel de Administração</h1>
+        <p>Gerencie os serviços e preços do simulador</p>
+    </div>
+
+    <div class="admin-container">
+        <!-- Formulário de Adição -->
+        <div class="card">
+            <h2>Novo Serviço</h2>
+            <form id="form-servico">
+                <div class="form-group">
+                    <label>Categoria (Ex: Carro Popular, SUV)</label>
+                    <input type="text" id="categoria" required placeholder="Ex: Carro SUV">
+                </div>
+                <div class="form-group">
+                    <label>Nome do Serviço</label>
+                    <input type="text" id="nome" required placeholder="Ex: Lavagem Detalhada">
+                </div>
+                <div class="form-group">
+                    <label>Preço (R$)</label>
+                    <input type="number" id="preco" step="0.01" required placeholder="Ex: 220">
+                </div>
+                <div class="form-group">
+                    <label>Preço Variável? (Exibe um * asterisco)</label>
+                    <select id="variavel">
+                        <option value="false">Não (Preço Fixo)</option>
+                        <option value="true">Sim (A partir de)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Adicionar Serviço</button>
+            </form>
+        </div>
+
+        <!-- Lista de Serviços -->
+        <div class="card">
+            <h2>Serviços Cadastrados</h2>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoria</th>
+                            <th>Serviço</th>
+                            <th>Preço</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-servicos">
+                        <tr><td colspan="4" style="text-align: center;">Carregando serviços...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sistema de Login
+        function verificarSenha() {
+            const senha = document.getElementById('senha-admin').value;
+            if (senha === 'admin2026vini') {
+                document.getElementById('login-screen').style.display = 'none';
+                carregarServicos(); 
+            } else {
+                document.getElementById('erro-senha').style.display = 'block';
+            }
+        }
+
+        // Permite logar apertando Enter
+        document.getElementById('senha-admin').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') verificarSenha();
+        });
+
+        // Configuração do Supabase
+        const supabaseUrl = 'https://zdxsuwdcvfzseyjhsjlg.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkeHN1d2RjdmZ6c2V5amhzamxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODYwMzMsImV4cCI6MjEwNDM2MjAzM30.mNfK87n36GFl1h4TIn2KmyXCoI7cWhqWLnw3mXy5isw'; 
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Carregar serviços
+        async function carregarServicos() {
+            const { data: servicos, error } = await supabase.from('servicos').select('*').order('categoria', { ascending: true });
+            
+            if (error) {
+                console.error('Erro ao buscar dados:', error);
+                document.getElementById('tabela-servicos').innerHTML = `<tr><td colspan="4" style="color: red;">Erro ao carregar dados. Verifique a conexão com o Supabase.</td></tr>`;
+                return;
+            }
+            
+            renderizarTabela(servicos);
+        }
+
+        // Adicionar novo serviço
+        document.getElementById('form-servico').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btnSubmit = this.querySelector('button[type="submit"]');
+            btnSubmit.innerHTML = 'Salvando...';
+            btnSubmit.disabled = true;
+
+            const novoServico = {
+                categoria: document.getElementById('categoria').value,
+                nome: document.getElementById('nome').value,
+                preco: parseFloat(document.getElementById('preco').value),
+                variavel: document.getElementById('variavel').value === 'true'
+            };
+
+            const { error } = await supabase.from('servicos').insert([novoServico]);
+
+            if (error) {
+                alert('Erro ao salvar o serviço: ' + error.message);
+            } else {
+                this.reset();
+                carregarServicos();
+            }
+
+            btnSubmit.innerHTML = '<i class="fa-solid fa-plus"></i> Adicionar Serviço';
+            btnSubmit.disabled = false;
+        });
+
+        // Excluir serviço
+        async function excluirServico(id) {
+            if(!confirm('Tem certeza que deseja excluir este serviço?')) return;
+
+            const { error } = await supabase.from('servicos').delete().eq('id', id);
+            
+            if (error) {
+                alert('Erro ao excluir: ' + error.message);
+            } else {
+                carregarServicos();
+            }
+        }
+
+        // Renderizar na tela
+        function renderizarTabela(servicos) {
+            const tbody = document.getElementById('tabela-servicos');
+            tbody.innerHTML = '';
+            
+            if(servicos.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum serviço cadastrado.</td></tr>';
+                return;
+            }
+
+            servicos.forEach(s => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${s.categoria}</td>
+                    <td>${s.nome} ${s.variavel ? '*' : ''}</td>
+                    <td>R$ ${Number(s.preco).toFixed(2).replace('.', ',')}</td>
+                    <td>
+                        <button onclick="excluirServico('${s.id}')" class="btn-danger"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
