@@ -117,42 +117,47 @@
         </div>
     </div>
 
+    <!-- SCRIPT 1: Blindagem da Tela de Login -->
     <script>
-        // Sistema de Login
         function verificarSenha() {
             const senha = document.getElementById('senha-admin').value;
             if (senha === 'admin2026vini') {
                 document.getElementById('login-screen').style.display = 'none';
-                carregarServicos(); 
+                
+                // Checa se o script do banco carregou sem erros de sintaxe
+                if (typeof carregarServicos === "function") {
+                    carregarServicos(); 
+                } else {
+                    alert("Acesso liberado, mas o Banco de Dados falhou. Verifique se você não apagou as aspas simples (' ') na chave do Supabase no código HTML.");
+                }
             } else {
                 document.getElementById('erro-senha').style.display = 'block';
             }
         }
 
-        // Permite logar apertando Enter
         document.getElementById('senha-admin').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') verificarSenha();
         });
+    </script>
 
-        // Configuração do Supabase
+    <!-- SCRIPT 2: Lógica do Banco de Dados (Supabase) -->
+    <script>
         const supabaseUrl = 'https://zdxsuwdcvfzseyjhsjlg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkeHN1d2RjdmZ6c2V5amhzamxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODYwMzMsImV4cCI6MjEwNDM2MjAzM30.mNfK87n36GFl1h4TIn2KmyXCoI7cWhqWLnw3mXy5isw'; 
         const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        // Carregar serviços
         async function carregarServicos() {
             const { data: servicos, error } = await supabase.from('servicos').select('*').order('categoria', { ascending: true });
             
             if (error) {
                 console.error('Erro ao buscar dados:', error);
-                document.getElementById('tabela-servicos').innerHTML = `<tr><td colspan="4" style="color: red;">Erro ao carregar dados. Verifique a conexão com o Supabase.</td></tr>`;
+                document.getElementById('tabela-servicos').innerHTML = `<tr><td colspan="4" style="color: red;">Erro ao carregar dados do Supabase.</td></tr>`;
                 return;
             }
             
             renderizarTabela(servicos);
         }
 
-        // Adicionar novo serviço
         document.getElementById('form-servico').addEventListener('submit', async function(e) {
             e.preventDefault();
             
@@ -180,7 +185,6 @@
             btnSubmit.disabled = false;
         });
 
-        // Excluir serviço
         async function excluirServico(id) {
             if(!confirm('Tem certeza que deseja excluir este serviço?')) return;
 
@@ -193,7 +197,6 @@
             }
         }
 
-        // Renderizar na tela
         function renderizarTabela(servicos) {
             const tbody = document.getElementById('tabela-servicos');
             tbody.innerHTML = '';
