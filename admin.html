@@ -117,18 +117,13 @@
         </div>
     </div>
 
-    <!-- SCRIPT 1: Blindagem da Tela de Login -->
+    <!-- SCRIPT 1: Login -->
     <script>
         function verificarSenha() {
             const senha = document.getElementById('senha-admin').value;
             if (senha === 'admin2026vini') {
                 document.getElementById('login-screen').style.display = 'none';
-                
-                if (typeof carregarServicos === "function") {
-                    carregarServicos(); 
-                } else {
-                    alert("Acesso liberado, mas o Banco de Dados falhou. Verifique se você não apagou as aspas simples (' ') na chave do Supabase no código HTML.");
-                }
+                carregarServicos(); 
             } else {
                 document.getElementById('erro-senha').style.display = 'block';
             }
@@ -139,9 +134,8 @@
         });
     </script>
 
-    <!-- SCRIPT 2: Lógica do Banco de Dados (Supabase) -->
+    <!-- SCRIPT 2: Supabase -->
     <script>
-        // ATENÇÃO: COLE A URL E A CHAVE EXATAMENTE NO LUGAR DO TEXTO EM MAIÚSCULO, MANTENDO AS ASPAS SIMPLES!
         const supabaseUrl = 'https://zdxsuwdcvfzseyjhsjlg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkeHN1d2RjdmZ6c2V5amhzamxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODYwMzMsImV4cCI6MjEwNDM2MjAzM30.mNfK87n36GFl1h4TIn2KmyXCoI7cWhqWLnw3mXy5isw'; 
         
@@ -152,7 +146,7 @@
             
             if (error) {
                 console.error('Erro ao buscar dados:', error);
-                document.getElementById('tabela-servicos').innerHTML = `<tr><td colspan="4" style="color: red;">Erro ao carregar dados do Supabase. Verifique se você rodou o código SQL no painel.</td></tr>`;
+                document.getElementById('tabela-servicos').innerHTML = `<tr><td colspan="4" style="color: red;">Erro ao carregar dados.</td></tr>`;
                 return;
             }
             
@@ -160,7 +154,7 @@
         }
 
         document.getElementById('form-servico').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Impede a página de recarregar
+            e.preventDefault();
             
             const btnSubmit = this.querySelector('button[type="submit"]');
             btnSubmit.innerHTML = 'Salvando...';
@@ -176,8 +170,9 @@
             const { error } = await supabase.from('servicos').insert([novoServico]);
 
             if (error) {
-                alert('Erro ao salvar o serviço: ' + error.message);
+                alert('ERRO DO SUPABASE: ' + error.message);
             } else {
+                alert('Serviço cadastrado com sucesso!');
                 this.reset();
                 carregarServicos();
             }
@@ -202,7 +197,7 @@
             const tbody = document.getElementById('tabela-servicos');
             tbody.innerHTML = '';
             
-            if(servicos.length === 0) {
+            if(!servicos || servicos.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum serviço cadastrado.</td></tr>';
                 return;
             }
