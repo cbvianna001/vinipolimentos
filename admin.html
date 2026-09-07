@@ -35,7 +35,6 @@
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #333; font-size: 0.9rem; }
         th { color: var(--accent); }
         
-        /* Tela de Login */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--bg-dark); z-index: 9999;
@@ -53,7 +52,6 @@
 </head>
 <body>
 
-    <!-- Tela de Login -->
     <div id="login-screen">
         <div class="login-box">
             <h2 style="margin-bottom: 20px;">Acesso Restrito</h2>
@@ -69,7 +67,6 @@
     </div>
 
     <div class="admin-container">
-        <!-- Formulário de Adição -->
         <div class="card">
             <h2>Novo Serviço</h2>
             <form id="form-servico">
@@ -96,7 +93,6 @@
             </form>
         </div>
 
-        <!-- Lista de Serviços -->
         <div class="card">
             <h2>Serviços Cadastrados</h2>
             <div style="overflow-x: auto;">
@@ -117,7 +113,6 @@
         </div>
     </div>
 
-    <!-- SCRIPT 1: Login com Sessão Fixa -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('vini_admin_logado') === 'true') {
@@ -133,7 +128,6 @@
             if (senha === 'admin2026vini') {
                 localStorage.setItem('vini_admin_logado', 'true');
                 document.getElementById('login-screen').style.display = 'none';
-                
                 if (typeof carregarServicos === "function") {
                     carregarServicos(); 
                 }
@@ -147,8 +141,8 @@
         });
     </script>
 
-    <!-- SCRIPT 2: Lógica do Banco de Dados (Supabase) -->
     <script>
+        // CONFIGURAÇÃO DO SUPABASE (Insira seus dados abaixo)
         const supabaseUrl = 'https://zdxsuwdcvfzseyjhsjlg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkeHN1d2RjdmZ6c2V5amhzamxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODYwMzMsImV4cCI6MjEwNDM2MjAzM30.mNfK87n36GFl1h4TIn2KmyXCoI7cWhqWLnw3mXy5isw'; 
         
