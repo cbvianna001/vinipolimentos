@@ -68,21 +68,21 @@
     </div>
 
     <div class="admin-container">
-        <!-- Formulário de Adição -->
+        <!-- Formulário sem dependência de evento de submit -->
         <div class="card">
             <h2>Novo Serviço</h2>
-            <form id="form-servico">
+            <div id="form-servico">
                 <div class="form-group">
                     <label>Categoria (Ex: Carro Popular, SUV)</label>
-                    <input type="text" id="categoria" required placeholder="Ex: Carro SUV">
+                    <input type="text" id="categoria" placeholder="Ex: Carro SUV">
                 </div>
                 <div class="form-group">
                     <label>Nome do Serviço</label>
-                    <input type="text" id="nome" required placeholder="Ex: Lavagem Detalhada">
+                    <input type="text" id="nome" placeholder="Ex: Lavagem Detalhada">
                 </div>
                 <div class="form-group">
                     <label>Preço (R$)</label>
-                    <input type="number" id="preco" step="0.01" required placeholder="Ex: 220">
+                    <input type="number" id="preco" step="0.01" placeholder="Ex: 220">
                 </div>
                 <div class="form-group">
                     <label>Preço Variável? (Exibe um * asterisco)</label>
@@ -91,8 +91,8 @@
                         <option value="true">Sim (A partir de)</option>
                     </select>
                 </div>
-                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Adicionar Serviço</button>
-            </form>
+                <button type="button" onclick="adicionarServico()" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Adicionar Serviço</button>
+            </div>
         </div>
 
         <!-- Lista de Serviços -->
@@ -145,7 +145,7 @@
         });
     </script>
 
-    <!-- SCRIPT 2: Supabase com Alertas de Diagnóstico -->
+    <!-- SCRIPT 2: Supabase Blindado -->
     <script>
         const supabaseUrl = 'https://zdxsuwdcvfzseyjhsjlg.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkeHN1d2RjdmZ6c2V5amhzamxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODYwMzMsImV4cCI6MjEwNDM2MjAzM30.mNfK87n36GFl1h4TIn2KmyXCoI7cWhqWLnw3mXy5isw'; 
@@ -168,22 +168,16 @@
             }
         }
 
-        document.getElementById('form-servico').addEventListener('submit', async function(e) {
-            e.preventDefault(); // Impede o recarregamento padrão
-            
+        async function adicionarServico() {
             const categoria = document.getElementById('categoria').value;
             const nome = document.getElementById('nome').value;
             const precoStr = document.getElementById('preco').value;
             const variavel = document.getElementById('variavel').value === 'true';
 
             if (!categoria || !nome || !precoStr) {
-                alert('Preencha todos os campos!');
+                alert('Por favor, preencha todos os campos!');
                 return;
             }
-
-            const btnSubmit = this.querySelector('button[type="submit"]');
-            btnSubmit.innerHTML = 'Salvando...';
-            btnSubmit.disabled = true;
 
             const novoServico = {
                 categoria: categoria.trim(),
@@ -195,16 +189,18 @@
             const { data, error } = await supabase.from('servicos').insert([novoServico]);
 
             if (error) {
-                alert('ERRO DO SUPABASE AO SALVAR: ' + error.message);
+                alert('ERRO DO SUPABASE: ' + error.message);
             } else {
-                alert('Sucesso! Serviço salvo no banco.');
-                this.reset();
+                alert('Serviço cadastrado com sucesso!');
+                // Limpa os campos
+                document.getElementById('categoria').value = '';
+                document.getElementById('nome').value = '';
+                document.getElementById('preco').value = '';
+                document.getElementById('variavel').value = 'false';
+                
                 carregarServicos();
             }
-
-            btnSubmit.innerHTML = '<i class="fa-solid fa-plus"></i> Adicionar Serviço';
-            btnSubmit.disabled = false;
-        });
+        }
 
         async function excluirServico(id) {
             if(!confirm('Tem certeza que deseja excluir este serviço?')) return;
